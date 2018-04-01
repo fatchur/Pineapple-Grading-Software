@@ -2,28 +2,48 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 #include <iostream>
+#include <ctime>
 #include "detectpineapple.h"
+#include "gradepineapple.h"
+#include "CSV.h"
 
 using namespace cv;
 using namespace std;
 
 int main()
 {
-    VideoCapture capturedDevice(0);
+    VideoCapture capturedDevice("small 1.mp4");
     if (!capturedDevice.isOpened()) {
         cout << "cannot open camera";
     }
+
+    //////////// write time to .csv file ///////////////
+    CSV myCsv;
+    ////////////////////////////////////////////////////
 
     /*
     vector<String> filenames;
     String folder = "/media/fatchur/9E8F-67DD/pesiapan jurnal/gambar/";
     glob(folder, filenames);    */
 
-    int a=0;
+    /////////////////////////////////////////////////////////
+    /////////// this is part to write a video ///////////////
+    /* double dWidth = capturedDevice.get(CV_CAP_PROP_FRAME_WIDTH);
+    double dHeight = capturedDevice.get(CV_CAP_PROP_FRAME_HEIGHT);
+    Size frameSize(static_cast<int>(dWidth), static_cast<int>(dHeight));
+    VideoWriter videoWriter ("out.avi", CV_FOURCC('P','I','M','1'), 20, frameSize,true); */
+    /////////////////////////////////////////////////////////
+
     while (true) {
+
+        //////////// part for starting the time ////////////
+        clock_t start = clock();
+        ////////////////////////////////////////////////////
+
+
         Mat cameraFrame;
         capturedDevice.read(cameraFrame);
-        //cameraFrame = imread(filenames[i]);
+        //cameraFrame = imread("coba.jpg");
         Mat origFrame = cameraFrame.clone();
 
         // build detect pineapple object
@@ -31,7 +51,7 @@ int main()
         // convert image to grayscale
         detectPineapple.grayscale(cameraFrame);
         // reduct noises of gray image
-        detectPineapple.reductNoises(cameraFrame, 7);
+        detectPineapple.reductNoises(cameraFrame, 5);
         // convert to binary
         detectPineapple.convertToBinary(cameraFrame);
         // closing
@@ -44,9 +64,6 @@ int main()
         // draw object ROI
         detectPineapple.drawROIObject(origFrame, objectRect);
 
-        a ++;
-        cout << a ;
-        cout<< objectRect.size() << endl;
 
         // for every object ROI in "objectRect"
         for( int i=0; i<objectRect.size(); i++){
@@ -101,25 +118,41 @@ int main()
             Mat binaryCopy = croppedImageBinary.clone();
             detectPineapple.compactnessAnalyze(binaryCopy, a, b, result, compactnessOfUpperRegion, compactnessOfLowerRegion);
 
+            // extract RGB
+            int R, G, B;
+            GradePineapple gradeIt;
+            gradeIt.extractRGB(croppedColorImage, croppedImageBinary, a, b, result, R, G, B);
+
+            // predict grade
+            string grade;
+            gradeIt.predictGrade(R,G,B, grade);
+            rectangle(origFrame, Rect (Point(objectRect[i].x-2, objectRect[i].y), Point(Point(objectRect[i].x + objectRect[i].width + 2, objectRect[i].y-28))), cvScalar(0,0,255,255), CV_FILLED, 8, 0);
+            putText(origFrame , "Grade: " + grade, Point(objectRect[i].x, objectRect[i].y-3), CV_FONT_HERSHEY_COMPLEX, 1, cvScalar(255, 255,255, 255), 1.5, CV_AA);
+
             // draw real sparator line
             detectPineapple.drawSparatorLine(croppedColorImage, a, b, p1, p2);
 
             // write label (crown or fruit) in each regian
-            // detectPineapple.writeLabel(croppedColorImage, p1, p2, a, b, result);
+            detectPineapple.writeLabel(croppedColorImage, p1, p2, a, b, result);
 
             // give color to fruit
-            String givenColor = "red";
-            detectPineapple.giveFruitColor(croppedImageBinary, croppedColorImage, a, b, result, givenColor);
+            //String givenColor = "red";
+            //detectPineapple.giveFruitColor(croppedImageBinary, croppedColorImage, a, b, result, givenColor);
 
             // now paste the "croppedImageColor" to "origframe"
             croppedColorImage.copyTo(origFrame(objectRect[i]));
         }
 
-        //imwrite(folder + "colored" + to_string(a) + ".jpg", origFrame);
-
+        double duration = (clock() - start)/(double)CLOCKS_PER_SEC;
+        vector<float> parameters;
+        parameters.push_back(duration);
+        parameters.push_back(objectRect[0].width * objectRect[0].height);
+        myCsv.writeCSV("small 1.csv",parameters );
+        cout << duration << endl;
         imshow("cam", origFrame);
-        //imshow("orig", origFrame);
-        waitKey(100);
+        //videoWriter.write(origFrame);
+        waitKey(3);
     }
+
     return 0;
 }

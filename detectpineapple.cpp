@@ -63,10 +63,10 @@ vector<Rect> DetectPineapple::labelling(Mat &binaryImage, Mat &captureFrame){
               cv::Rect rect;
               cv::floodFill(label_image, cv::Point(x,y), label_count, &rect, 0, 0, 4);
 
-              if ((rect.width*rect.height)> 1000 & (rect.width*rect.height) < 200000 )
+              if ((rect.width*rect.height)> 1000)
                  {
                    areaObject.push_back(rect);
-                   rectangle (captureFrame, Point(rect.x, rect.y), Point(rect.x+rect.width, rect.y+rect.height) , cvScalar(0,255,0,0), 2 , 8 , 0);
+                   //rectangle (captureFrame, Point(rect.x, rect.y), Point(rect.x+rect.width, rect.y+rect.height) , cvScalar(0,255,0,0), 2 , 8 , 0);
                    //circle( captureFrame, Point(rect.x+rect.width/2, rect.y+rect.height/2), 5 , Scalar( 0, 0, 255 ), 2 );
                  }
             }
@@ -76,7 +76,7 @@ vector<Rect> DetectPineapple::labelling(Mat &binaryImage, Mat &captureFrame){
 }
 void DetectPineapple::drawROIObject(Mat &originalImage, vector<Rect> theRect){
     for (uint i=0; i<theRect.size(); i++){
-        rectangle(originalImage, theRect[i], cvScalar(255,0,0,255), 1, 8, 0);
+        rectangle(originalImage, theRect[i], cvScalar(0,0,255,255), 2, 8, 0);
     }
 }
 vector<Point> DetectPineapple::getObjectPoints(Mat &binaryImage)	{
@@ -359,12 +359,12 @@ void DetectPineapple::writeLabel(Mat &image, Point firstPoint, Point secondPoint
 
     // if upper part is fruit
     if (result == 0){
-        putText(image, "fruit", centerOfUpperPart, CV_FONT_HERSHEY_PLAIN, 1.5, Scalar(0,0,0,255), 2, 8);
-        putText(image, "crown", centerOfLowerPart, CV_FONT_HERSHEY_PLAIN, 1.5, Scalar(0,0,0,255), 2, 8);
+        putText(image, "fruit", centerOfUpperPart, CV_FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255,255), 2, 8);
+        putText(image, "crown", centerOfLowerPart, CV_FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255,255), 2, 8);
     }
     else {
-        putText(image, "crown", centerOfUpperPart, CV_FONT_HERSHEY_PLAIN, 1.5, Scalar(0,0,0,255), 2, 8);
-        putText(image, "fruit", centerOfLowerPart, CV_FONT_HERSHEY_PLAIN, 1.5, Scalar(0,0,0,255), 2, 8);
+        putText(image, "crown", centerOfUpperPart, CV_FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255,255), 2, 8);
+        putText(image, "fruit", centerOfLowerPart, CV_FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255,255), 2, 8);
     }
 
     /*
